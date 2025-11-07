@@ -47,10 +47,23 @@ python main.py play
 - `--max-moves N` - Maximum number of moves (default: 20)
 - `--screenshots-dir DIR` - Directory for screenshots (default: screenshots)
 - `--delay SECONDS` - Delay between moves (default: 2.0)
+- `--url URL` - Custom game URL (use "local" for bundled HTML game)
 
-**Example with options:**
+**Examples:**
+
+Play with remote website (default):
 ```bash
 python main.py play --no-headless --max-moves 15 --delay 3
+```
+
+Play with local HTML game (useful for testing):
+```bash
+python main.py play --url local
+```
+
+Play with custom URL:
+```bash
+python main.py play --url https://example.com/tictactoe
 ```
 
 ### Analyze a previous game
@@ -74,12 +87,26 @@ python main.py analyze screenshots/game_20250107_120000/
 
 ```
 .
-├── main.py              # CLI interface
-├── game_controller.py   # Playwright automation for game control
-├── tictactoe_agent.py   # OpenAI agent for decision making
-├── requirements.txt     # Python dependencies
-└── screenshots/         # Generated screenshots (timestamped by game)
+├── main.py                # CLI interface
+├── game_controller.py     # Playwright automation for game control
+├── tictactoe_agent.py     # OpenAI agent for decision making
+├── tictactoe_local.html   # Local HTML tic-tac-toe game for testing
+├── requirements.txt       # Python dependencies
+└── screenshots/           # Generated screenshots (timestamped by game)
 ```
+
+## Network & Environment Notes
+
+**Proxy Support**: The tool automatically detects and uses `HTTPS_PROXY` environment variables for accessing remote websites.
+
+**Local Testing**: A bundled HTML tic-tac-toe game (`tictactoe_local.html`) is included for testing in environments with network restrictions. Use `--url local` to play with it.
+
+**Containerized Environments**: In some containerized or restricted environments, Playwright may have limitations with:
+- Complex proxy authentication
+- Headless mode screenshot capabilities
+- External website access
+
+For these scenarios, use the local HTML game option or run in a standard desktop environment.
 
 ## Screenshot Organization
 
