@@ -83,6 +83,127 @@ python main.py analyze screenshots/game_20250107_120000/
 5. **Iteration**: Repeats until game is complete or max moves reached
 6. **Final Analysis**: Provides a comprehensive analysis of the game outcome
 
+## Visual Demo
+
+### Game Flow Example
+
+Here's what a typical game looks like:
+
+**Initial State:**
+```
+┌───────┬───────┬───────┐
+│       │       │       │
+│   1   │   2   │   3   │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│   4   │   5   │   6   │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│   7   │   8   │   9   │
+│       │       │       │
+└───────┴───────┴───────┘
+```
+**AI Decision**: "Empty board - taking center for maximum strategic advantage"
+**Move**: X → Position 5
+
+**After Move 1:**
+```
+┌───────┬───────┬───────┐
+│       │       │       │
+│   1   │   2   │   3   │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│   4   │  [X]  │   6   │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│   7   │   8   │   9   │
+│       │       │       │
+└───────┴───────┴───────┘
+```
+
+**After Move 2:**
+```
+┌───────┬───────┬───────┐
+│       │       │       │
+│  [O]  │   2   │   3   │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│   4   │  [X]  │   6   │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│   7   │   8   │  [X]  │
+│       │       │       │
+└───────┴───────┴───────┘
+```
+**AI Decision**: "Establishing diagonal threat [1-5-9]"
+**Move**: X → Position 9
+
+**Final State (X Wins!):**
+```
+┌───────┬───────┬───────┐
+│       │       │       │
+│  [O]  │  [O]  │  ✓X   │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│   X   │  ✓X   │  [O]  │
+│       │       │       │
+├───────┼───────┼───────┤
+│       │       │       │
+│  ✓X   │   8   │  [O]  │
+│       │       │       │
+└───────┴───────┴───────┘
+```
+**Result**: X wins via diagonal [3-5-7]! 🎉
+
+### Example AI Analysis
+
+When analyzing the board, GPT-4 Vision provides detailed reasoning:
+
+```
+ANALYSIS: Current board shows X at center (5) and bottom-right (9).
+O occupies top-left (1) and top-middle (2). O is building a threat
+on the top row.
+
+YOUR_SYMBOL: X
+
+STRATEGY: Must block position 3 to prevent O victory on top row.
+This move also maintains our diagonal threat through positions 3-5-7,
+creating a dual-purpose defensive and offensive play.
+
+MOVE: 3
+```
+
+### Terminal Output Preview
+
+```bash
+🎮 Starting Tic-Tac-Toe AI Agent
+📁 Screenshots will be saved to: screenshots/game_20250107_143022
+
+============================================================
+🎯 Move 1
+============================================================
+🤔 Agent is analyzing the board...
+
+🤖 Agent Response:
+ANALYSIS: The board is completely empty...
+YOUR_SYMBOL: X
+STRATEGY: Taking center position for maximum winning opportunities
+MOVE: 5
+
+✅ Agent decided to play at position 5
+✓ Clicked cell at position 5 (row 2, col 2)
+📸 Screenshot saved: screenshots/.../step_003_after_move_1.png
+```
+
+For more detailed examples, see [docs/DEMO.md](docs/DEMO.md) and [docs/example_game_flow.md](docs/example_game_flow.md).
+
 ## Project Structure
 
 ```
