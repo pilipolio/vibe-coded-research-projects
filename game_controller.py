@@ -11,21 +11,66 @@ from typing import Optional, Tuple
 class TicTacToeGame:
     """Controls the tic-tac-toe game using Playwright."""
 
-    def __init__(self, screenshots_dir: str = "screenshots"):
+    def __init__(self, screenshots_dir: str = "screenshots", game_url: Optional[str] = None):
         self.screenshots_dir = Path(screenshots_dir)
         self.screenshots_dir.mkdir(exist_ok=True)
         self.browser: Optional[Browser] = None
         self.page: Optional[Page] = None
         self.playwright = None
         self.screenshot_count = 0
-        self.game_url = "https://memorymatching.com/tic-tac-toe"
+        self.game_url = game_url or "https://memorymatching.com/tic-tac-toe"
 
     def start_browser(self, headless: bool = False):
         """Start the browser and navigate to the game."""
         self.playwright = sync_playwright().start()
-        self.browser = self.playwright.chromium.launch(headless=headless)
-        self.page = self.browser.new_page()
-        self.page.goto(self.game_url)
+
+        # Launch with additional args to handle proxy/network issues
+        launch_args = [
+            '--disable-blink-features=AutomationControlled',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+        ]
+
+        # Only add disable-web-security for remote URLs
+        if not self.game_url.startswith('file://'):
+            launch_args.append('--disable-web-security')
+
+        self.browser = self.playwright.chromium.launch(
+            headless=headless,
+            args=launch_args
+        )
+
+        # Get proxy from environment if available (but not for file:// URLs)
+        proxy_config = None
+        is_file_url = self.game_url.startswith('file://')
+
+        if not is_file_url:
+            https_proxy = os.getenv('HTTPS_PROXY') or os.getenv('https_proxy')
+            if https_proxy:
+                proxy_config = {"server": https_proxy}
+                print(f"🔒 Using proxy: {https_proxy[:50]}...")
+
+        # Create context with proxy and bypasses for potential network issues
+        context = self.browser.new_context(
+            proxy=proxy_config,
+            ignore_https_errors=True,
+            bypass_csp=True,
+        )
+
+        self.page = context.new_page()
+
+        # Try to navigate
+        try:
+            if is_file_url:
+                self.page.goto(self.game_url, wait_until='domcontentloaded')
+            else:
+                self.page.goto(self.game_url, timeout=60000, wait_until='networkidle')
+        except Exception as e:
+            print(f"⚠️ Initial navigation failed: {e}")
+            if not is_file_url:
+                print("🔄 Retrying with simpler wait condition...")
+                self.page.goto(self.game_url, timeout=60000, wait_until='domcontentloaded')
 
         # Wait for page to load
         time.sleep(2)

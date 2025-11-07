@@ -25,7 +25,8 @@ def cli():
 @click.option('--max-moves', default=20, help='Maximum number of moves before stopping')
 @click.option('--screenshots-dir', default='screenshots', help='Directory to save screenshots')
 @click.option('--delay', default=2.0, help='Delay between moves in seconds')
-def play(headless: bool, max_moves: int, screenshots_dir: str, delay: float):
+@click.option('--url', default=None, help='Game URL (use "local" for local HTML file)')
+def play(headless: bool, max_moves: int, screenshots_dir: str, delay: float, url: str):
     """Start a new game and let the AI agent play."""
 
     # Load environment variables
@@ -38,6 +39,11 @@ def play(headless: bool, max_moves: int, screenshots_dir: str, delay: float):
         click.echo("  export OPENAI_API_KEY='your-api-key-here'", err=True)
         sys.exit(1)
 
+    # Handle "local" shortcut for local HTML file
+    if url == "local":
+        local_html = Path(__file__).parent / "tictactoe_local.html"
+        url = f"file://{local_html.absolute()}"
+
     # Create timestamped screenshots directory
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     game_screenshots_dir = Path(screenshots_dir) / f"game_{timestamp}"
@@ -48,10 +54,12 @@ def play(headless: bool, max_moves: int, screenshots_dir: str, delay: float):
     click.echo(f"🤖 Max moves: {max_moves}")
     click.echo(f"⏱️  Delay between moves: {delay}s")
     click.echo(f"👁️  Headless mode: {headless}")
+    if url:
+        click.echo(f"🌐 Game URL: {url}")
     click.echo()
 
     # Initialize game controller and agent
-    game = TicTacToeGame(screenshots_dir=str(game_screenshots_dir))
+    game = TicTacToeGame(screenshots_dir=str(game_screenshots_dir), game_url=url)
     agent = TicTacToeAgent()
 
     try:
