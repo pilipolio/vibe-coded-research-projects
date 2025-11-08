@@ -12,6 +12,13 @@ This directory contains Leela Chess Zero (Lc0) neural network weights and tools 
   - Source: https://storage.lczero.org/files/networks-contrib/
   - Min Lc0 Version: 0.29.0
 
+- **t1-256x10-distilled-swa-2432500.onnx.zip** (48 MB) - INCLUDED IN REPO
+  - Converted ONNX model (simplified demonstration version)
+  - Created using simple_lc0_to_onnx.py
+  - Compatible with ONNX Runtime and standard ML tools
+  - Input: [1, 112, 8, 8] (board representation)
+  - Outputs: policy [1, 1858], value [1, 3] (WDL)
+
 ### Tools
 
 #### lc0_network_inspector.py
@@ -42,6 +49,54 @@ python3 lc0_network_inspector.py t1-256x10-distilled-swa-2432500.pb.gz
 - Total parameter count and memory estimates
 - Detailed ONNX conversion guidance
 
+#### simple_lc0_to_onnx.py
+
+A Python-based ONNX converter for educational and demonstration purposes.
+
+**Features:**
+- Reads Lc0 .pb.gz files and creates ONNX models
+- Decodes weight encodings (LINEAR16, FLOAT16, BFLOAT16)
+- Creates simplified ONNX structure with correct input/output format
+- Compatible with ONNX Runtime for inference testing
+
+**Usage:**
+```bash
+python3 simple_lc0_to_onnx.py <input.pb.gz> <output.onnx>
+```
+
+**Example:**
+```bash
+python3 simple_lc0_to_onnx.py t1-256x10-distilled-swa-2432500.pb.gz model.onnx
+```
+
+**Important Notes:**
+- This creates a SIMPLIFIED model for demonstration purposes
+- The full network architecture is not reconstructed
+- For production use, prefer Lc0's official leela2onnx C++ tool
+- Useful for learning ONNX format and Lc0 weight decoding
+
+#### Dockerfile & convert_to_onnx.sh
+
+Build environment and automation scripts for Lc0 ONNX conversion.
+
+**Dockerfile** - Multi-stage build for Lc0 with ONNX support:
+```bash
+docker build -t lc0-onnx:latest .
+```
+
+**convert_to_onnx.sh** - Automated conversion pipeline:
+```bash
+./convert_to_onnx.sh
+```
+
+This script:
+1. Builds the Lc0 Docker image
+2. Converts the network to ONNX using Lc0's official tool
+3. Verifies the output
+4. Compresses the result
+
+**Note:** Building Lc0 from source takes significant time. The Python converter (simple_lc0_to_onnx.py) is faster for quick demonstrations.
+
 ### Supporting Files
 
 - **net_pb2.py** - Compiled Python protobuf bindings for Lc0's network format
@@ -49,9 +104,28 @@ python3 lc0_network_inspector.py t1-256x10-distilled-swa-2432500.pb.gz
 
 ## Converting to ONNX
 
-There are three main approaches to convert Lc0 weights to ONNX format:
+There are four approaches to convert Lc0 weights to ONNX format:
 
-### Option 1: Lc0's leela2onnx Tool (Recommended)
+### Option 1: Python Simple Converter (Quick Demo)
+
+Use the included Python converter for quick demonstrations:
+
+```bash
+python3 simple_lc0_to_onnx.py t1-256x10-distilled-swa-2432500.pb.gz output.onnx
+```
+
+**Advantages:**
+- Fast (seconds)
+- No compilation required
+- Educational - shows how to read Lc0 formats
+- Works with ONNX Runtime for inference testing
+
+**Limitations:**
+- Simplified model structure (not full network architecture)
+- For demonstration/learning purposes
+- Not suitable for production chess play
+
+### Option 2: Lc0's leela2onnx Tool (Production Quality)
 
 Build and use Lc0's official conversion tool:
 
@@ -70,7 +144,7 @@ cd lc0
     --onnx-opset=14
 ```
 
-### Option 2: ONNX-TRT Backend (Runtime Conversion)
+### Option 3: ONNX-TRT Backend (Runtime Conversion)
 
 Let Lc0 convert automatically during execution:
 
@@ -83,7 +157,7 @@ lc0 --backend=onnx-trt --weights=t1-256x10-distilled-swa-2432500.pb.gz
 
 The engine will convert and cache the ONNX model automatically.
 
-### Option 3: Python-based Conversion (Advanced)
+### Option 4: Python-based Conversion (Advanced)
 
 For custom conversion logic, you can extend `lc0_network_inspector.py` to build ONNX graphs using the `onnx` Python library. This requires deep understanding of both Lc0 and ONNX formats.
 
