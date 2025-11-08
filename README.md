@@ -245,6 +245,18 @@ Each game creates a timestamped directory with screenshots:
 - OpenAI API key with GPT-4 vision access
 - Internet connection
 
+## Additional Resources
+
+This repository also contains:
+
+### Lc0 ONNX Conversion Guide
+
+Comprehensive documentation and tools for converting Leela Chess Zero (Lc0) neural network weights to ONNX format:
+
+- **Documentation**: [docs/LC0_ONNX_CONVERSION.md](docs/LC0_ONNX_CONVERSION.md)
+- **Tools & Models**: [lc0_models/](lc0_models/)
+- **Network Inspector**: Python tool for analyzing Lc0 network files and getting conversion guidance
+
 ## License
 
 See LICENSE file.

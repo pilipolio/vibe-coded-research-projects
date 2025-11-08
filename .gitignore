@@ -39,3 +39,7 @@ screenshots/
 
 # Playwright
 .playwright/
+
+# Lc0 models and repositories (too large for git)
+lc0_models/*.pb.gz
+lc0_models/lc0-repo/
