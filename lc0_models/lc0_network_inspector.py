@@ -220,10 +220,22 @@ def inspect_network(pb_file_path):
             total_params += input_params
 
     # Residual blocks (for CNN architectures)
+    residual_channels = None
+    last_residual_output_dim = None
+
     if len(weights.residual) > 0:
         print(f"\n{'='*80}")
         print(f"Residual Tower: {len(weights.residual)} blocks")
         residual_params = 0
+
+        # Try to infer channel count from first residual block
+        first_block = weights.residual[0]
+        if first_block.HasField('conv1') and first_block.conv1.HasField('weights'):
+            conv_dims = list(first_block.conv1.weights.dims)
+            if len(conv_dims) >= 1:
+                residual_channels = conv_dims[0]  # Output channels
+                print(f"  Residual channels: {residual_channels}")
+
         for i, res_block in enumerate(weights.residual):
             block_params = 0
             if res_block.HasField('conv1'):
@@ -242,13 +254,63 @@ def inspect_network(pb_file_path):
 
         print(f"  Total Parameters: {residual_params:,}")
         print(f"  Avg per block: {residual_params // len(weights.residual):,}")
+
+        # The last residual block output is the feature representation
+        last_residual_output_dim = residual_channels
+
+        print(f"\n  {'='*76}")
+        print(f"  TRANSFER LEARNING INTERFACE")
+        print(f"  {'='*76}")
+        print(f"  Last Shared Layer: residual_block_{len(weights.residual)-1}_output")
+        print(f"  Feature Channels: {last_residual_output_dim if last_residual_output_dim else 'N/A'}")
+        print(f"  Output Shape: [batch_size, {last_residual_output_dim if last_residual_output_dim else '?'}, 8, 8]")
+        print(f"                (8x8 = chess board spatial dimensions)")
+        print(f"  ")
+        print(f"  Use this layer for:")
+        print(f"    • Feature extraction for explainability")
+        print(f"    • Concept extraction (e.g., piece positions, threats)")
+        print(f"    • Transfer learning to related tasks")
+        print(f"    • Spatial pattern visualization")
+        print(f"  {'='*76}")
+
         total_params += residual_params
 
     # Encoder layers (for Transformer architectures)
+    encoder_embedding_dim = None
+    last_encoder_output_dim = None
+
     if len(weights.encoder) > 0:
         print(f"\n{'='*80}")
         print(f"Transformer Encoder: {len(weights.encoder)} layers")
         encoder_params = 0
+
+        # Try to infer embedding dimension from first encoder layer
+        first_encoder = weights.encoder[0]
+        if first_encoder.HasField('mha') and first_encoder.mha.HasField('q_w'):
+            q_w = first_encoder.mha.q_w
+            q_w_dims = list(q_w.dims)
+
+            if len(q_w_dims) >= 2 and q_w_dims[-1] > 0:
+                # Dims field is populated
+                encoder_embedding_dim = q_w_dims[-1]
+            elif len(q_w.params) > 0:
+                # Infer from parameter byte count
+                # For attention, q_w is typically [d_model, d_model]
+                import math
+                bytes_per_param = 2  # LINEAR16, FLOAT16, BFLOAT16 all use 2 bytes
+                total_params = len(q_w.params) // bytes_per_param
+                encoder_embedding_dim = int(math.sqrt(total_params))
+
+            if encoder_embedding_dim:
+                print(f"  Embedding dimension: {encoder_embedding_dim}")
+
+                # Verify with FFN if available
+                if first_encoder.HasField('ffn') and first_encoder.ffn.HasField('dense1_w'):
+                    ffn_w1 = first_encoder.ffn.dense1_w
+                    if len(ffn_w1.params) > 0:
+                        ffn_params = len(ffn_w1.params) // bytes_per_param
+                        ffn_hidden = ffn_params // encoder_embedding_dim
+                        print(f"  FFN expansion ratio: {ffn_hidden // encoder_embedding_dim}x (hidden dim: {ffn_hidden})")
 
         for i, encoder in enumerate(weights.encoder):
             enc_info = analyze_encoder_layer(encoder, i)
@@ -261,6 +323,25 @@ def inspect_network(pb_file_path):
 
         print(f"\n  Total Encoder Parameters: {encoder_params:,}")
         print(f"  Avg per layer: {encoder_params // len(weights.encoder):,}")
+
+        # The last encoder output is the feature representation before heads
+        last_encoder_output_dim = encoder_embedding_dim
+
+        print(f"\n  {'='*76}")
+        print(f"  TRANSFER LEARNING INTERFACE")
+        print(f"  {'='*76}")
+        print(f"  Last Shared Layer: encoder_layer_{len(weights.encoder)-1}_output")
+        print(f"  Feature Dimension: {last_encoder_output_dim if last_encoder_output_dim else 'N/A'}")
+        print(f"  Output Shape: [batch_size, 64, {last_encoder_output_dim if last_encoder_output_dim else '?'}]")
+        print(f"                (64 = 8x8 chess board positions)")
+        print(f"  ")
+        print(f"  Use this layer for:")
+        print(f"    • Feature extraction for explainability")
+        print(f"    • Concept extraction (e.g., piece positions, threats)")
+        print(f"    • Transfer learning to related tasks")
+        print(f"    • Attention visualization")
+        print(f"  {'='*76}")
+
         total_params += encoder_params
 
     # Policy head

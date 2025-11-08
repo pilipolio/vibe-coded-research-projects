@@ -2,6 +2,11 @@
 
 This directory contains Leela Chess Zero (Lc0) neural network weights and tools for inspecting and converting them to ONNX format.
 
+## Quick Links
+
+- **[Transfer Learning Guide](TRANSFER_LEARNING.md)** - Use Lc0 features for explainability and concept extraction
+- **[ONNX Conversion Guide](../docs/LC0_ONNX_CONVERSION.md)** - Complete conversion documentation
+
 ## Contents
 
 ### Downloaded Networks
@@ -215,6 +220,24 @@ The T1 architecture is a Transformer-based neural network designed for chess:
 - Better at capturing long-range dependencies on the chess board
 - Good balance between playing strength and inference speed
 - Suitable for resource-constrained environments
+
+**Transfer Learning Interface:**
+
+The network provides rich features for explainability and transfer learning tasks:
+
+- **Last Shared Layer:** `encoder_layer_9_output` (output of final encoder before task heads)
+- **Feature Dimension:** 256 per position
+- **Output Shape:** `[batch_size, 64, 256]` (64 = 8×8 board positions)
+- **FFN Hidden Dim:** 1024 (4× expansion)
+
+**Use Cases:**
+- **Feature Extraction:** Extract 256-dimensional vectors for each board position
+- **Concept Extraction:** Train probes to detect tactical/strategic concepts
+- **Explainability:** Understand what the network "sees" in a position
+- **Transfer Learning:** Adapt to related tasks (variants, analysis, teaching)
+- **Attention Visualization:** Visualize which squares the network focuses on
+
+See **[TRANSFER_LEARNING.md](TRANSFER_LEARNING.md)** for detailed examples and code.
 
 ## Requirements
 

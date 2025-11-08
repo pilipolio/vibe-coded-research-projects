@@ -377,11 +377,67 @@ Refer to Lc0 documentation for exact specifications.
 - **TensorRT:** https://developer.nvidia.com/tensorrt
 - **Protocol Buffers:** https://protobuf.dev/
 
+## Transfer Learning and Explainability
+
+Lc0 networks provide rich intermediate features that can be used for:
+- **Explainability:** Understanding what the network "sees" in a position
+- **Concept Extraction:** Training probes to detect specific chess concepts
+- **Transfer Learning:** Adapting to related tasks (variants, analysis tools, teaching)
+- **Attention Visualization:** Visualizing which board positions the network focuses on
+
+### Key Feature Layer
+
+For the **T1-256x10** network (used in this guide):
+
+- **Last Shared Layer:** `encoder_layer_9_output`
+- **Dimensions:** `[batch_size, 64, 256]`
+  - 64 = 8×8 chess board positions
+  - 256 = feature dimension per position
+- **Use:** Extract before policy/value heads for transfer learning
+
+### Example Use Cases
+
+**1. Concept Probing:**
+```python
+# Extract features from last encoder layer
+features = extract_encoder_output(position)  # [64, 256]
+
+# Train linear probe for specific concepts
+probe = LinearProbe(256, num_concepts)
+concepts = probe(features)
+# e.g., "has_passed_pawn", "king_safety", "piece_activity"
+```
+
+**2. Position Similarity:**
+```python
+# Compare positions based on Lc0 features
+features_A = extract_encoder_output(position_A).mean(axis=0)  # [256]
+features_B = extract_encoder_output(position_B).mean(axis=0)  # [256]
+
+similarity = cosine_similarity(features_A, features_B)
+```
+
+**3. Tactical Motif Detection:**
+```python
+# Use position-specific features
+features_per_square = extract_encoder_output(position)  # [64, 256]
+
+# Train classifier to detect pins, forks, etc.
+motif_classifier = TacticalClassifier(256)
+motifs = motif_classifier(features_per_square)
+```
+
+For detailed examples, code, and best practices, see:
+- **[lc0_models/TRANSFER_LEARNING.md](../lc0_models/TRANSFER_LEARNING.md)**
+- **Network Inspector Tool:** `lc0_models/lc0_network_inspector.py`
+
 ## Conclusion
 
 While Lc0's native `.pb.gz` format is recommended for standard usage, ONNX conversion capabilities enable integration with broader ML ecosystems. The Lc0 engine's built-in conversion features provide the most reliable path for creating ONNX models, ensuring compatibility and performance.
 
 For the best chess-playing experience and latest features, use the official Lc0 engine with native format weights. For research, integration, or custom ML workflows, ONNX conversion provides flexibility while maintaining the power of Lc0's neural networks.
+
+The intermediate features from Lc0 networks (particularly the last encoder output) provide a powerful foundation for explainability research, concept extraction, and transfer learning to related chess tasks.
 
 ---
 
